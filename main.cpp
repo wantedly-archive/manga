@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  // 一度2の階乗にリサイズ
   Size size = src_img.size();
   Mat resize_img(AlignPow2(size.height), AlignPow2(size.width), CV_64FC(3));
   resize(src_img, resize_img, resize_img.size());
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
   Mat gray_img;
   cvtColor(resize_img, gray_img, CV_BGR2GRAY);
 
+  // 適応的に二値化(輪郭抽出)
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
     CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 11, 10);
@@ -80,6 +82,7 @@ int main(int argc, char* argv[]) {
     cout << "file not found" << endl;
     return -1;
   }
+
   Mat gray_tone_img;
   cvtColor(tone_img, gray_tone_img, CV_BGR2GRAY);
   Mat resize_tone_img;
@@ -91,9 +94,9 @@ int main(int argc, char* argv[]) {
   // toneを貼る
   dst_img.copyTo(resize_tone_img, mask_img);
   
+  // new_imageファイルを保存
   string new_imagename = "./new_img/";
   new_imagename += basename(string(imagename));
-
   if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
