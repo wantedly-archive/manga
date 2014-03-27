@@ -15,45 +15,43 @@ string basename(const string& path) {
 int main(int argc, char* argv[]) {
   // load color image
   const char* imagename = argc > 1 ? argv[1] : "./img/lena.png";
-  IplImage* cvsrc = cvLoadImage(imagename, 1);
 
-  if (cvsrc == NULL) {
+  Mat src_img = imread(imagename);
+  if (!src_img.data) {
     cout << "file not found" << endl;
     return -1;
   }
   
-  // pyramid segmentation
-  CvMemStorage *storage = 0;
-  CvSeq *comp = 0;
-  storage = cvCreateMemStorage (0);
-  IplImage *cvpyr = cvCloneImage (cvsrc);
-  cvPyrSegmentation (cvsrc, cvpyr, storage, &comp, 4, 255.0, 50.0);
-  cvReleaseMemStorage (&storage);
-  Mat pyr_img(cvpyr);
-
   // convert color image to grayscale
-  Mat src_img(cvsrc);
   Mat gray_img;
   cvtColor(src_img, gray_img, CV_BGR2GRAY);
 
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
-    CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 7, 11);
+    CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 10);
   Mat rgb_bin_img;
   cvtColor(bin_img, rgb_bin_img, CV_GRAY2BGR);
+
+  // cvPyrSegmentationを使うため、IplImageにキャスト
+  IplImage cvsrc = src_img;
+  IplImage *cvsrc_p = &cvsrc;
   
-  cout << "pyr_img size:" << pyr_img.size() << endl;
-  cout << "pyr_img channels:" << pyr_img.channels() << endl;
-  cout << "rgb_bin_img size:" << rgb_bin_img.size() << endl;
-  cout << "rgb_bin_img channels:" << rgb_bin_img.channels() << endl;
+  // pyramid segmentation
+  CvMemStorage *storage = 0;
+  CvSeq *comp = 0;
+  storage = cvCreateMemStorage (0);
+  IplImage *cvpyr = cvCloneImage (cvsrc_p);
+  cvPyrSegmentation (cvsrc_p, cvpyr, storage, &comp, 4, 255.0, 50.0);
+  cvReleaseMemStorage (&storage);
+  Mat pyr_img(cvpyr);
 
-  Mat dst_img;
-  bitwise_and(pyr_img, rgb_bin_img, dst_img);
-
-  string new_imagename = "./new_";
+  Mat and_img;
+  bitwise_and(pyr_img, rgb_bin_img, and_img);
+  
+  string new_imagename = "./new_img/";
   new_imagename += basename(string(imagename));
 
-  if (imwrite(new_imagename, dst_img)) {
+  if (imwrite(new_imagename, and_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
