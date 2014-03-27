@@ -1,4 +1,4 @@
 *.out
-img/*
+*img/*
 *.png
 *.jpg
