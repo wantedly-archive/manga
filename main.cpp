@@ -39,14 +39,21 @@ int main(int argc, char* argv[]) {
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
     CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 7, 11);
+  Mat rgb_bin_img;
+  cvtColor(bin_img, rgb_bin_img, CV_GRAY2BGR);
+  
+  cout << "pyr_img size:" << pyr_img.size() << endl;
+  cout << "pyr_img channels:" << pyr_img.channels() << endl;
+  cout << "rgb_bin_img size:" << rgb_bin_img.size() << endl;
+  cout << "rgb_bin_img channels:" << rgb_bin_img.channels() << endl;
 
   Mat dst_img;
-  bitwise_and(pyr_img, bin_img, dst_img);
+  bitwise_and(pyr_img, rgb_bin_img, dst_img);
 
   string new_imagename = "./new_";
   new_imagename += basename(string(imagename));
 
-  if (imwrite(new_imagename, bin_img)) {
+  if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
