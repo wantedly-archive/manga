@@ -21,10 +21,17 @@ int main(int argc, char* argv[]) {
     cout << "file not found" << endl;
     return -1;
   }
-  
+
+  cout << src_img.size() << endl;
+
+  Mat resize_img(512, 2048, CV_64FC(3));
+  resize(src_img, resize_img, resize_img.size());
+
+  cout << resize_img.size() << endl;
+
   // convert color image to grayscale
   Mat gray_img;
-  cvtColor(src_img, gray_img, CV_BGR2GRAY);
+  cvtColor(resize_img, gray_img, CV_BGR2GRAY);
 
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
@@ -33,15 +40,15 @@ int main(int argc, char* argv[]) {
   cvtColor(bin_img, rgb_bin_img, CV_GRAY2BGR);
 
   // cvPyrSegmentationを使うため、IplImageにキャスト
-  IplImage cvsrc = src_img;
-  IplImage *cvsrc_p = &cvsrc;
+  IplImage cvresize = resize_img;
+  IplImage *cvresize_p = &cvresize;
   
   // pyramid segmentation
   CvMemStorage *storage = 0;
   CvSeq *comp = 0;
   storage = cvCreateMemStorage (0);
-  IplImage *cvpyr = cvCloneImage (cvsrc_p);
-  cvPyrSegmentation (cvsrc_p, cvpyr, storage, &comp, 4, 255.0, 50.0);
+  IplImage *cvpyr = cvCloneImage (cvresize_p);
+  cvPyrSegmentation (cvresize_p, cvpyr, storage, &comp, 4, 255.0, 50.0);
   cvReleaseMemStorage (&storage);
   Mat pyr_img(cvpyr);
 
@@ -51,7 +58,10 @@ int main(int argc, char* argv[]) {
   string new_imagename = "./new_img/";
   new_imagename += basename(string(imagename));
 
-  if (imwrite(new_imagename, and_img)) {
+  Mat dst_img;
+  resize(and_img, dst_img, src_img.size());
+
+  if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
