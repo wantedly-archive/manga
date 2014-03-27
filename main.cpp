@@ -12,6 +12,14 @@ string basename(const string& path) {
   return path.substr(path.find_last_of('/') + 1);
 }
 
+unsigned int AlignPow2(unsigned int a) {
+  unsigned int i = 1;
+  while (a > (i <<= 1)) {
+    if (!i) { break; }
+  }
+  return i;
+}
+
 int main(int argc, char* argv[]) {
   // load color image
   const char* imagename = argc > 1 ? argv[1] : "./img/lena.png";
@@ -22,12 +30,12 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  cout << src_img.size() << endl;
-
-  Mat resize_img(512, 2048, CV_64FC(3));
+  Size size = src_img.size();
+  Mat resize_img(AlignPow2(size.height), AlignPow2(size.width), CV_64FC(3));
   resize(src_img, resize_img, resize_img.size());
 
-  cout << resize_img.size() << endl;
+  cout << "src_img: " << src_img.size() << endl;
+  cout << "resize_img: " << resize_img.size() << endl;
 
   // convert color image to grayscale
   Mat gray_img;
@@ -52,14 +60,16 @@ int main(int argc, char* argv[]) {
   cvReleaseMemStorage (&storage);
   Mat pyr_img(cvpyr);
 
+  // 画像を重ねる
   Mat and_img;
   bitwise_and(pyr_img, rgb_bin_img, and_img);
   
-  string new_imagename = "./new_img/";
-  new_imagename += basename(string(imagename));
-
+  // src_imgのサイズに戻す
   Mat dst_img;
   resize(and_img, dst_img, src_img.size());
+  
+  string new_imagename = "./new_img/";
+  new_imagename += basename(string(imagename));
 
   if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
