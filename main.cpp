@@ -43,9 +43,7 @@ int main(int argc, char* argv[]) {
 
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
-    CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 10);
-  Mat rgb_bin_img;
-  cvtColor(bin_img, rgb_bin_img, CV_GRAY2BGR);
+    CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 11, 10);
 
   // cvPyrSegmentationを使うため、IplImageにキャスト
   IplImage cvresize = resize_img;
@@ -56,13 +54,16 @@ int main(int argc, char* argv[]) {
   CvSeq *comp = 0;
   storage = cvCreateMemStorage (0);
   IplImage *cvpyr = cvCloneImage (cvresize_p);
-  cvPyrSegmentation (cvresize_p, cvpyr, storage, &comp, 4, 255.0, 50.0);
+  cvPyrSegmentation (cvresize_p, cvpyr, storage, &comp, 8, 255.0, 50.0);
   cvReleaseMemStorage (&storage);
   Mat pyr_img(cvpyr);
 
+  Mat gray_pyr_img;
+  cvtColor(pyr_img, gray_pyr_img, CV_BGR2GRAY);
+  
   // 画像を重ねる
   Mat and_img;
-  bitwise_and(pyr_img, rgb_bin_img, and_img);
+  bitwise_and(bin_img, gray_pyr_img, and_img);
   
   // src_imgのサイズに戻す
   Mat dst_img;
