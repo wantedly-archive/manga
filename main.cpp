@@ -78,5 +78,9 @@ int main(int argc, char* argv[]) {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
   }
 
+  namedWindow("Display Window", WINDOW_AUTOSIZE);
+  imshow("Display Window", dst_img);
+  waitKey(0);
+
   return 0;
 }
