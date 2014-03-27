@@ -23,7 +23,6 @@ unsigned int AlignPow2(unsigned int a) {
 int main(int argc, char* argv[]) {
   // load color image
   const char* imagename = argc > 1 ? argv[1] : "./img/lena.png";
-
   Mat src_img = imread(imagename);
   if (!src_img.data) {
     cout << "file not found" << endl;
@@ -33,9 +32,6 @@ int main(int argc, char* argv[]) {
   Size size = src_img.size();
   Mat resize_img(AlignPow2(size.height), AlignPow2(size.width), CV_64FC(3));
   resize(src_img, resize_img, resize_img.size());
-
-  cout << "src_img: " << src_img.size() << endl;
-  cout << "resize_img: " << resize_img.size() << endl;
 
   // convert color image to grayscale
   Mat gray_img;
@@ -49,12 +45,12 @@ int main(int argc, char* argv[]) {
   IplImage cvresize = resize_img;
   IplImage *cvresize_p = &cvresize;
   
-  // pyramid segmentation
+  // 領域補完
   CvMemStorage *storage = 0;
   CvSeq *comp = 0;
   storage = cvCreateMemStorage (0);
   IplImage *cvpyr = cvCloneImage (cvresize_p);
-  cvPyrSegmentation (cvresize_p, cvpyr, storage, &comp, 8, 255.0, 50.0);
+  cvPyrSegmentation (cvresize_p, cvpyr, storage, &comp, 4, 255.0, 50.0);
   cvReleaseMemStorage (&storage);
   Mat pyr_img(cvpyr);
 
@@ -68,11 +64,37 @@ int main(int argc, char* argv[]) {
   // src_imgのサイズに戻す
   Mat dst_img;
   resize(and_img, dst_img, src_img.size());
+
+  // トーンを貼る用の領域を計算
+  Mat mask_img;
+  threshold(dst_img, mask_img, 180, 255, THRESH_BINARY);
+  Mat min_mask_img;
+  threshold(dst_img, min_mask_img, 80, 255, THRESH_BINARY);
+  bitwise_not(min_mask_img, min_mask_img);
+  add(mask_img, min_mask_img, mask_img);
+ 
+  // load tone image
+  const char* tone_imagename = "./img/tone.png";
+  Mat tone_img = imread(tone_imagename);
+  if (!tone_img.data) {
+    cout << "file not found" << endl;
+    return -1;
+  }
+  Mat gray_tone_img;
+  cvtColor(tone_img, gray_tone_img, CV_BGR2GRAY);
+  Mat resize_tone_img;
+  resize(gray_tone_img, resize_tone_img, src_img.size());
+
+  cout << "resize_tone_img size: " << resize_tone_img.size() << endl;
+  cout << "dst_img size: " << dst_img.size() << endl;
+
+  // toneを貼る
+  dst_img.copyTo(resize_tone_img, mask_img);
   
   string new_imagename = "./new_img/";
   new_imagename += basename(string(imagename));
 
-  if (imwrite(new_imagename, dst_img)) {
+  if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
