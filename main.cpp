@@ -9,12 +9,7 @@
 using namespace std;
 using namespace cv;
 
-const string getcwd() {
-  char* a_cwd = getcwd(NULL, 0);
-  string s_cwd(a_cwd);
-  free(a_cwd);
-  return s_cwd;
-}
+string dir = "/usr/local/var/www/manga";
 
 string basename(const string& path) {
   return path.substr(path.find_last_of('/') + 1);
@@ -30,10 +25,10 @@ unsigned int AlignPow2(unsigned int a) {
 
 int main(int argc, char* argv[]) {
   // load color image
-  string imagename = argc > 1 ? argv[1] : getcwd() + "/lena/lena.png";
+  string imagename = argc > 1 ? argv[1] : dir + "/lena/lena.png";
   Mat src_img = imread(imagename);
   if (!src_img.data) {
-    cout << "file not found" << endl;
+    cout << "source file not found" << endl;
     return -1;
   }
 
@@ -90,10 +85,10 @@ int main(int argc, char* argv[]) {
   min_mask_img.release();
  
   // load tone image
-  string tone_imagename = getcwd() + "/material/tone.png";
+  string tone_imagename = dir + "/material/tone.png";
   Mat tone_img = imread(tone_imagename);
   if (!tone_img.data) {
-    cout << "file not found" << endl;
+    cout << "tone file not found" << endl;
     return -1;
   }
 
@@ -109,7 +104,7 @@ int main(int argc, char* argv[]) {
   dst_img.copyTo(resize_tone_img, mask_img);
   
   // new_imageファイルを保存
-  string new_imagename = getcwd() + "/tone_img/";
+  string new_imagename = dir + "/tone_img/";
   new_imagename += basename(string(imagename));
   if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
@@ -117,9 +112,9 @@ int main(int argc, char* argv[]) {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
   }
 
-  namedWindow("Display Window", WINDOW_AUTOSIZE);
-  imshow("Display Window", resize_tone_img);
-  waitKey(0);
+  // namedWindow("Display Window", WINDOW_AUTOSIZE);
+  // imshow("Display Window", resize_tone_img);
+  // waitKey(0);
 
   return 0;
 }
