@@ -104,8 +104,7 @@ int main(int argc, char* argv[]) {
   dst_img.copyTo(resize_tone_img, mask_img);
   
   // new_imageファイルを保存
-  string new_imagename = dir + "/tone_img/";
-  new_imagename += basename(string(imagename));
+  string new_imagename = argv[2];
   if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
