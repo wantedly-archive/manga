@@ -9,4 +9,4 @@ LDFLAGS = \
 					-lopencv_legacy
 
 all:
-	     g++ $(CXXFLAGS) $(LDFLAGS) main.cpp
+	     g++ -o manga.out $(CXXFLAGS) $(LDFLAGS) manga.cpp
