@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  // 一度2の階乗にリサイズ
+  // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
   Size size = src_img.size();
   Mat resize_img(AlignPow2(size.height), AlignPow2(size.width), CV_64FC(3));
   resize(src_img, resize_img, resize_img.size());
@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
     CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 11, 10);
+  gray_img.release();
 
   // cvPyrSegmentationを使うため、IplImageにキャスト
   IplImage cvresize = resize_img;
@@ -58,14 +59,18 @@ int main(int argc, char* argv[]) {
 
   Mat gray_pyr_img;
   cvtColor(pyr_img, gray_pyr_img, CV_BGR2GRAY);
+  pyr_img.release();
   
   // 画像を重ねる
   Mat and_img;
   bitwise_and(bin_img, gray_pyr_img, and_img);
+  bin_img.release();
+  gray_pyr_img.release();
   
   // src_imgのサイズに戻す
   Mat dst_img;
   resize(and_img, dst_img, src_img.size());
+  and_img.release();
 
   // トーンを貼る用の領域を計算
   Mat mask_img;
@@ -74,6 +79,7 @@ int main(int argc, char* argv[]) {
   threshold(dst_img, min_mask_img, 80, 255, THRESH_BINARY);
   bitwise_not(min_mask_img, min_mask_img);
   add(mask_img, min_mask_img, mask_img);
+  min_mask_img.release();
  
   // load tone image
   const char* tone_imagename = "./img/tone.png";
@@ -91,11 +97,11 @@ int main(int argc, char* argv[]) {
   cout << "resize_tone_img size: " << resize_tone_img.size() << endl;
   cout << "dst_img size: " << dst_img.size() << endl;
 
-  // toneを貼る
+  // toneの上に画像を重ねる
   dst_img.copyTo(resize_tone_img, mask_img);
   
   // new_imageファイルを保存
-  string new_imagename = "./new_img/";
+  string new_imagename = "./tone_img/";
   new_imagename += basename(string(imagename));
   if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
@@ -104,7 +110,7 @@ int main(int argc, char* argv[]) {
   }
 
   namedWindow("Display Window", WINDOW_AUTOSIZE);
-  imshow("Display Window", dst_img);
+  imshow("Display Window", resize_tone_img);
   waitKey(0);
 
   return 0;
