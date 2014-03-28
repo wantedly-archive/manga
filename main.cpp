@@ -22,7 +22,7 @@ unsigned int AlignPow2(unsigned int a) {
 
 int main(int argc, char* argv[]) {
   // load color image
-  const char* imagename = argc > 1 ? argv[1] : "./img/lena.png";
+  const char* imagename = argc > 1 ? argv[1] : "./lena/lena.png";
   Mat src_img = imread(imagename);
   if (!src_img.data) {
     cout << "file not found" << endl;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   min_mask_img.release();
  
   // load tone image
-  const char* tone_imagename = "./img/tone.png";
+  const char* tone_imagename = "./mat_img/tone.png";
   Mat tone_img = imread(tone_imagename);
   if (!tone_img.data) {
     cout << "file not found" << endl;
