@@ -1,6 +1,7 @@
 // main.cpp
 #include <iostream>
 #include <string>
+#include "unistd.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/legacy/legacy.hpp>
@@ -22,7 +23,7 @@ unsigned int AlignPow2(unsigned int a) {
 
 int main(int argc, char* argv[]) {
   // load color image
-  const char* imagename = argc > 1 ? argv[1] : "./lena/lena.png";
+  string imagename = argc > 1 ? argv[1] : lena_image;
   Mat src_img = imread(imagename);
   if (!src_img.data) {
     cout << "file not found" << endl;
