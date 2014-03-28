@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   min_mask_img.release();
  
   // load tone image
-  const char* tone_imagename = "./mat_img/tone.png";
+  const char* tone_imagename = "./material/tone.png";
   Mat tone_img = imread(tone_imagename);
   if (!tone_img.data) {
     cout << "file not found" << endl;
