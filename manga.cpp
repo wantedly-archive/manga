@@ -3,7 +3,6 @@
 #include <string>
 #include "unistd.h"
 #include <opencv2/opencv.hpp>
-#include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/legacy/legacy.hpp>
 
 using namespace std;
@@ -96,9 +95,6 @@ int main(int argc, char* argv[]) {
   cvtColor(tone_img, gray_tone_img, CV_BGR2GRAY);
   Mat resize_tone_img;
   resize(gray_tone_img, resize_tone_img, src_img.size());
-
-  cout << "resize_tone_img size: " << resize_tone_img.size() << endl;
-  cout << "dst_img size: " << dst_img.size() << endl;
 
   // toneの上に画像を重ねる
   dst_img.copyTo(resize_tone_img, mask_img);
