@@ -101,23 +101,27 @@ int main(int argc, char* argv[]) {
   // tone画像を重ねる
   resize_tone_img.copyTo(dst_img, mask_img);
   
-  // load sound image
-  string sound_imagename = dir + "/material/0078_gogo_jo.png";
-  Mat sound_img = imread(sound_imagename, /* 0はgray scaleでの読み込み */ 0);
-  if (!sound_img.data) {
-    cout << "sound file not found" << endl;
-    return -1;
-  }
-  
-  Mat resize_sound_img;
-  resize(sound_img, resize_sound_img, src_size);
-  sound_img.release();
+  // 音響イメージが第三引数として渡されていれば、読み込み
+  if (argc > 3) {
+    string sound_imagename = argv[3];
+    Mat sound_img = imread(sound_imagename, /* 0はgray scaleでの読み込み */ 0);
+    
+    // load sound image
+    if (!sound_img.data) {
+      cout << "sound file not found" << endl;
+      return -1;
+    }
+    
+    Mat resize_sound_img;
+    resize(sound_img, resize_sound_img, src_size);
+    sound_img.release();
  
-  Mat mask_sound_img;
-  bitwise_not(resize_sound_img, mask_sound_img);
+    Mat mask_sound_img;
+    bitwise_not(resize_sound_img, mask_sound_img);
 
-  // 音響イメージを重ねる
-  resize_sound_img.copyTo(dst_img, mask_sound_img);
+    // 音響イメージを重ねる
+    resize_sound_img.copyTo(dst_img, mask_sound_img);
+  }
   
   // new_imageファイルを保存
   string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
