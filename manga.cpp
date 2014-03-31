@@ -83,6 +83,7 @@ int main(int argc, char* argv[]) {
   bitwise_not(min_mask_img, min_mask_img);
   add(mask_img, min_mask_img, mask_img);
   min_mask_img.release();
+  bitwise_not(mask_img, mask_img);
  
   // load tone image
   string tone_imagename = dir + "/material/tone.png";
@@ -97,8 +98,8 @@ int main(int argc, char* argv[]) {
   Mat resize_tone_img;
   resize(gray_tone_img, resize_tone_img, src_size);
 
-  // toneの上に画像を重ねる
-  dst_img.copyTo(resize_tone_img, mask_img);
+  // tone画像を重ねる
+  resize_tone_img.copyTo(dst_img, mask_img);
   
   // load sound image
   string sound_imagename = dir + "/material/0078_gogo_jo.png";
@@ -116,11 +117,11 @@ int main(int argc, char* argv[]) {
   bitwise_not(resize_sound_img, mask_sound_img);
 
   // 音響イメージを重ねる
-  resize_sound_img.copyTo(resize_tone_img, mask_sound_img);
+  resize_sound_img.copyTo(dst_img, mask_sound_img);
   
   // new_imageファイルを保存
   string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
-  if (imwrite(new_imagename, resize_tone_img)) {
+  if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
