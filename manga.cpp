@@ -74,61 +74,68 @@ int main(int argc, char* argv[]) {
   bitwise_and(color_line_img, resize_pyr_img, dst_img);
   color_line_img.release();
   resize_pyr_img.release();
-
-  // dst_imgの grayscale を用意
-  Mat gray_dst_img;
-  cvtColor(dst_img, gray_dst_img, CV_BGR2GRAY);
-
-  // トーンを貼る用の領域を計算
-  Mat mask_img;
-  threshold(gray_dst_img, mask_img, 180, 255, THRESH_BINARY);
-  Mat min_mask_img;
-  threshold(gray_dst_img, min_mask_img, 80, 255, THRESH_BINARY);
-  bitwise_not(min_mask_img, min_mask_img);
-  add(mask_img, min_mask_img, mask_img);
-  min_mask_img.release();
-  bitwise_not(mask_img, mask_img);
- 
-  // load tone image
-  string tone_imagename = dir + "/material/tone.png";
-  Mat tone_img = imread(tone_imagename, /* 0はgray scaleでの読み込み */ 0);
-  if (!tone_img.data) {
-    cout << "tone file not found" << endl;
-    return -1;
-  }
-
-  // tone画像をresize
-  Mat resize_tone_img;
-  resize(tone_img, resize_tone_img, src_size);
-
-  // tone画像を重ねる
-  resize_tone_img.copyTo(gray_dst_img, mask_img);
   
-  // 音響イメージが第三引数として渡されていれば、読み込み
-  if (argc > 3) {
-    string sound_imagename = argv[3];
-    Mat sound_img = imread(sound_imagename, /* 0はgray scaleでの読み込み */ 0);
+  // 音響イメージが題4引数として渡されていれば、読み込み
+  if (argc > 4) {
+    string sound_imagename = argv[4];
+    Mat sound_img = imread(sound_imagename);
     
     // load sound image
     if (!sound_img.data) {
       cout << "sound file not found" << endl;
+    } else {
+      Mat resize_sound_img;
+      resize(sound_img, resize_sound_img, src_size);
+      sound_img.release();
+
+      // 一度 grayscale に変換してから、マスクimage生成
+      Mat gray_sound_img;
+      cvtColor(resize_sound_img, gray_sound_img, CV_BGR2GRAY);
+      Mat mask_sound_img;
+      bitwise_not(gray_sound_img, mask_sound_img);
+
+      // 音響イメージを重ねる
+      resize_sound_img.copyTo(dst_img, mask_sound_img);
+    }
+  }
+
+  // gray 文字列が第3引数として渡されていれば、読み込み
+  if (argc > 3 && !strncmp(argv[3], "gray", 4)) {
+    // dst_imgの grayscale を用意
+    Mat gray_dst_img;
+    cvtColor(dst_img, gray_dst_img, CV_BGR2GRAY);
+
+    // トーンを貼る用の領域を計算
+    Mat mask_img;
+    threshold(gray_dst_img, mask_img, 180, 255, THRESH_BINARY);
+    Mat min_mask_img;
+    threshold(gray_dst_img, min_mask_img, 80, 255, THRESH_BINARY);
+    bitwise_not(min_mask_img, min_mask_img);
+    add(mask_img, min_mask_img, mask_img);
+    min_mask_img.release();
+    bitwise_not(mask_img, mask_img);
+ 
+    // load tone image
+    string tone_imagename = dir + "/material/tone.png";
+    Mat tone_img = imread(tone_imagename, /* 0はgray scaleでの読み込み */ 0);
+    if (!tone_img.data) {
+      cout << "tone file not found" << endl;
       return -1;
     }
-    
-    Mat resize_sound_img;
-    resize(sound_img, resize_sound_img, src_size);
-    sound_img.release();
- 
-    Mat mask_sound_img;
-    bitwise_not(resize_sound_img, mask_sound_img);
 
-    // 音響イメージを重ねる
-    resize_sound_img.copyTo(dst_img, mask_sound_img);
+    // tone画像をresize
+    Mat resize_tone_img;
+    resize(tone_img, resize_tone_img, src_size);
+
+    // tone画像を重ねる
+    resize_tone_img.copyTo(gray_dst_img, mask_img);
+
+    dst_img = gray_dst_img;
   }
   
   // new_imageファイルを保存
   string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
-  if (imwrite(new_imagename, gray_dst_img)) {
+  if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
