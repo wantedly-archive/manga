@@ -3,7 +3,7 @@
 ```bash
 $ git clone git@github.com:wantedly/manga.git && cd manga
 $ make
-$ ./manga (入力画像ファイル名) (出力画像ファイル名)
+$ ./manga (入力画像ファイル名) (出力画像ファイル名) (gray or color指定) (重ねたい効果音画像等)
 ```
 
 ## REQUIREMENTS
