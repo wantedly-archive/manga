@@ -32,9 +32,10 @@ int main(int argc, char* argv[]) {
   }
 
   // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
-  Size size = src_img.size();
-  Mat resize_img(AlignPow2(size.height), AlignPow2(size.width), CV_64FC(3));
+  Size src_size = src_img.size();
+  Mat resize_img(AlignPow2(src_size.height), AlignPow2(src_size.width), CV_64FC(3));
   resize(src_img, resize_img, resize_img.size());
+  src_img.release();
 
   // convert color image to grayscale
   Mat gray_img;
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
   
   // src_imgのサイズに戻す
   Mat dst_img;
-  resize(and_img, dst_img, src_img.size());
+  resize(and_img, dst_img, src_size);
   and_img.release();
 
   // トーンを貼る用の領域を計算
@@ -94,13 +95,31 @@ int main(int argc, char* argv[]) {
   Mat gray_tone_img;
   cvtColor(tone_img, gray_tone_img, CV_BGR2GRAY);
   Mat resize_tone_img;
-  resize(gray_tone_img, resize_tone_img, src_img.size());
+  resize(gray_tone_img, resize_tone_img, src_size);
 
   // toneの上に画像を重ねる
   dst_img.copyTo(resize_tone_img, mask_img);
   
+  // load sound image
+  string sound_imagename = dir + "/material/0078_gogo_jo.png";
+  Mat sound_img = imread(sound_imagename, /* 0はgray scaleでの読み込み */ 0);
+  if (!sound_img.data) {
+    cout << "sound file not found" << endl;
+    return -1;
+  }
+  
+  Mat resize_sound_img;
+  resize(sound_img, resize_sound_img, src_size);
+  sound_img.release();
+ 
+  Mat mask_sound_img;
+  bitwise_not(resize_sound_img, mask_sound_img);
+
+  // 音響イメージを重ねる
+  resize_sound_img.copyTo(resize_tone_img, mask_sound_img);
+  
   // new_imageファイルを保存
-  string new_imagename = argv[2];
+  string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
   if (imwrite(new_imagename, resize_tone_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
