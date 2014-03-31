@@ -31,21 +31,21 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
-  Size src_size = src_img.size();
-  Mat resize_img(AlignPow2(src_size.height), AlignPow2(src_size.width), CV_64FC(3));
-  resize(src_img, resize_img, resize_img.size());
-  src_img.release();
-
   // convert color image to grayscale
   Mat gray_img;
-  cvtColor(resize_img, gray_img, CV_BGR2GRAY);
+  cvtColor(src_img, gray_img, CV_BGR2GRAY);
 
   // 適応的に二値化(輪郭抽出)
   Mat bin_img;
   adaptiveThreshold(gray_img, bin_img, 255,
     CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 11, 10);
   gray_img.release();
+  
+  // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
+  Size src_size = src_img.size();
+  Mat resize_img(AlignPow2(src_size.height), AlignPow2(src_size.width), CV_64FC(3));
+  resize(src_img, resize_img, resize_img.size());
+  src_img.release();
 
   // cvPyrSegmentationを使うため、IplImageにキャスト
   IplImage cvresize = resize_img;
@@ -64,16 +64,16 @@ int main(int argc, char* argv[]) {
   cvtColor(pyr_img, gray_pyr_img, CV_BGR2GRAY);
   pyr_img.release();
   
-  // 画像を重ねる
-  Mat and_img;
-  bitwise_and(bin_img, gray_pyr_img, and_img);
-  bin_img.release();
+  // src_imgのサイズに戻す
+  Mat resize_pyr_img;
+  resize(gray_pyr_img, resize_pyr_img, src_size);
   gray_pyr_img.release();
   
-  // src_imgのサイズに戻す
+  // 画像を重ねる
   Mat dst_img;
-  resize(and_img, dst_img, src_size);
-  and_img.release();
+  bitwise_and(bin_img, resize_pyr_img, dst_img);
+  bin_img.release();
+  resize_pyr_img.release();
 
   // トーンを貼る用の領域を計算
   Mat mask_img;
