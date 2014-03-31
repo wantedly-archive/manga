@@ -122,9 +122,20 @@ int main(int argc, char* argv[]) {
     // dst_imgの grayscale を用意
     Mat gray_dst_img;
     cvtColor(dst_img, gray_dst_img, CV_BGR2GRAY);
+
+    // 最大画素、最小画素からthreshold画素を求める
+    double min_pix, max_pix;
+    Point min_loc, max_loc;
+    minMaxLoc(gray_dst_img, &min_pix, &max_pix, &min_loc, &max_loc);
+    double thr_pix = (max_pix - min_pix) * 1 / 2;
+  
+    // ハイライトをとばす
+    Mat white_img;
+    threshold(gray_dst_img, white_img, thr_pix, 245, THRESH_BINARY);
+    white_img.copyTo(gray_dst_img, white_img); 
  
     // load tone image
-    string tone_imagename = dir + "/material/tone.png";
+    string tone_imagename = dir + "/material/small_tone.png";
     Mat tone_img = imread(tone_imagename, /* 0はgray scaleでの読み込み */ 0);
 
     if (!tone_img.data) {
@@ -132,9 +143,9 @@ int main(int argc, char* argv[]) {
     } else {
       // トーンを貼る用の領域を計算
       Mat mask_img;
-      threshold(gray_dst_img, mask_img, 180, 255, THRESH_BINARY);
+      threshold(gray_dst_img, mask_img, thr_pix, 255, THRESH_BINARY);
       Mat min_mask_img;
-      threshold(gray_dst_img, min_mask_img, 80, 255, THRESH_BINARY);
+      threshold(gray_dst_img, min_mask_img, (thr_pix + min_pix) / 2, 255, THRESH_BINARY);
       bitwise_not(min_mask_img, min_mask_img);
       add(mask_img, min_mask_img, mask_img);
       min_mask_img.release();
@@ -143,7 +154,7 @@ int main(int argc, char* argv[]) {
       // tone画像をresize
       Mat resize_tone_img;
       resize(tone_img, resize_tone_img, src_size);
-
+    
       // tone画像を重ねる
       resize_tone_img.copyTo(gray_dst_img, mask_img);
     }
