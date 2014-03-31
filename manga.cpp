@@ -1,4 +1,5 @@
 // main.cpp
+#include <fstream>
 #include <iostream>
 #include <string>
 #include "unistd.h"
@@ -22,12 +23,29 @@ unsigned int AlignPow2(unsigned int a) {
   return i;
 }
 
+void file_copy(string src, string dst) {
+  ifstream ifs(src);
+  if (!ifs) {
+    cout << "copy source file open error: " << src << '\n';
+  }
+  
+  ofstream ofs(dst);
+  if (!ofs) {
+    cout << "copy out file open error: " << dst << '\n';
+  }
+
+  // コピー
+  ofs << ifs.rdbuf() << flush;
+}
+
 int main(int argc, char* argv[]) {
   // load color image
   string imagename = argc > 1 ? argv[1] : dir + "/lena/lena.png";
   Mat src_img = imread(imagename);
   if (!src_img.data) {
     cout << "source file not found" << endl;
+    string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
+    file_copy(imagename, new_imagename);
     return -1;
   }
 
