@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include "unistd.h"
+#include <magic.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/legacy/legacy.hpp>
 
@@ -28,7 +29,7 @@ void file_copy(string src, string dst) {
   if (!ifs) {
     cout << "copy source file open error: " << src << '\n';
   }
-  
+
   ofstream ofs(dst);
   if (!ofs) {
     cout << "copy out file open error: " << dst << '\n';
@@ -41,6 +42,23 @@ void file_copy(string src, string dst) {
 int main(int argc, char* argv[]) {
   // load color image
   string imagename = argc > 1 ? argv[1] : dir + "/lena/lena.png";
+
+  magic_t cookie;
+  if((cookie = magic_open(MAGIC_MIME_TYPE)) == NULL) {
+    puts(magic_error(cookie));
+    return 1;
+  }
+  if(magic_load(cookie, NULL) == -1) {
+    puts(magic_error(cookie));
+    return 1;
+  }
+  const char *m;
+  if((m = magic_file(cookie, imagename.c_str())) == NULL) {
+    puts(magic_error(cookie));
+    return 1;
+  }
+  puts(m);
+
   Mat src_img = imread(imagename);
   if (!src_img.data) {
     cout << "source file not found" << endl;
@@ -62,7 +80,7 @@ int main(int argc, char* argv[]) {
   // 輪郭画像をRGBに戻す
   Mat color_line_img;
   cvtColor(line_img, color_line_img, CV_GRAY2BGR);
-  
+
   // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
   Size src_size = src_img.size();
   Mat resize_img(AlignPow2(src_size.height), AlignPow2(src_size.width), CV_64FC(3));
@@ -72,7 +90,7 @@ int main(int argc, char* argv[]) {
   // cvPyrSegmentationを使うため、IplImageにキャスト
   IplImage cvresize = resize_img;
   IplImage *cvresize_p = &cvresize;
-  
+
   // 領域補完
   CvMemStorage *storage = 0;
   CvSeq *comp = 0;
@@ -86,19 +104,19 @@ int main(int argc, char* argv[]) {
   Mat resize_pyr_img;
   resize(pyr_img, resize_pyr_img, src_size);
   pyr_img.release();
-  
+
   // 画像を重ねる
   Mat dst_img;
   bitwise_and(color_line_img, resize_pyr_img, dst_img);
   color_line_img.release();
   resize_pyr_img.release();
-  
+
   // 音響イメージが題4引数として渡されていれば、読み込み
   if (argc > 4) {
     // load sound image
     string sound_imagename = argv[4];
     Mat sound_img = imread(sound_imagename);
-    
+
     if (!sound_img.data) {
       cout << "sound file not found" << endl;
     } else {
@@ -128,12 +146,12 @@ int main(int argc, char* argv[]) {
     Point min_loc, max_loc;
     minMaxLoc(gray_dst_img, &min_pix, &max_pix, &min_loc, &max_loc);
     double thr_pix = (max_pix - min_pix) * 1 / 2;
-  
+
     // ハイライトをとばす
     Mat white_img;
     threshold(gray_dst_img, white_img, thr_pix, 245, THRESH_BINARY);
-    white_img.copyTo(gray_dst_img, white_img); 
- 
+    white_img.copyTo(gray_dst_img, white_img);
+
     // load tone image
     string tone_imagename = dir + "/material/small_tone.png";
     Mat tone_img = imread(tone_imagename, /* 0はgray scaleでの読み込み */ 0);
@@ -150,18 +168,18 @@ int main(int argc, char* argv[]) {
       add(mask_img, min_mask_img, mask_img);
       min_mask_img.release();
       bitwise_not(mask_img, mask_img);
-   
+
       // tone画像をresize
       Mat resize_tone_img;
       resize(tone_img, resize_tone_img, src_size);
-    
+
       // tone画像を重ねる
       resize_tone_img.copyTo(gray_dst_img, mask_img);
     }
 
     dst_img = gray_dst_img;
   }
-  
+
   // new_imageファイルを保存
   string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
   if (imwrite(new_imagename, dst_img)) {
