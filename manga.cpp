@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
   }
   
   // new_imageファイルを保存
-  string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
+  string new_imagename = argc > 2 ? string(argv[2]) + ".png" : dir + "/new_" + basename(imagename);
   if (imwrite(new_imagename, dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
