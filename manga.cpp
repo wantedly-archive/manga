@@ -31,15 +31,19 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  // convert color image to grayscale
+  // 素材画像を grayscale に変換
   Mat gray_img;
   cvtColor(src_img, gray_img, CV_BGR2GRAY);
 
   // 適応的に二値化(輪郭抽出)
-  Mat bin_img;
-  adaptiveThreshold(gray_img, bin_img, 255,
+  Mat line_img;
+  adaptiveThreshold(gray_img, line_img, 255,
     CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 11, 10);
   gray_img.release();
+
+  // 輪郭画像をRGBに戻す
+  Mat color_line_img;
+  cvtColor(line_img, color_line_img, CV_GRAY2BGR);
   
   // 一度2の階乗にリサイズ(cvPyrSegmentationが2の階乗のサイズしか受け付けない)
   Size src_size = src_img.size();
@@ -60,26 +64,26 @@ int main(int argc, char* argv[]) {
   cvReleaseMemStorage (&storage);
   Mat pyr_img(cvpyr);
 
-  Mat gray_pyr_img;
-  cvtColor(pyr_img, gray_pyr_img, CV_BGR2GRAY);
-  pyr_img.release();
-  
   // src_imgのサイズに戻す
   Mat resize_pyr_img;
-  resize(gray_pyr_img, resize_pyr_img, src_size);
-  gray_pyr_img.release();
+  resize(pyr_img, resize_pyr_img, src_size);
+  pyr_img.release();
   
   // 画像を重ねる
   Mat dst_img;
-  bitwise_and(bin_img, resize_pyr_img, dst_img);
-  bin_img.release();
+  bitwise_and(color_line_img, resize_pyr_img, dst_img);
+  color_line_img.release();
   resize_pyr_img.release();
+
+  // dst_imgの grayscale を用意
+  Mat gray_dst_img;
+  cvtColor(dst_img, gray_dst_img, CV_BGR2GRAY);
 
   // トーンを貼る用の領域を計算
   Mat mask_img;
-  threshold(dst_img, mask_img, 180, 255, THRESH_BINARY);
+  threshold(gray_dst_img, mask_img, 180, 255, THRESH_BINARY);
   Mat min_mask_img;
-  threshold(dst_img, min_mask_img, 80, 255, THRESH_BINARY);
+  threshold(gray_dst_img, min_mask_img, 80, 255, THRESH_BINARY);
   bitwise_not(min_mask_img, min_mask_img);
   add(mask_img, min_mask_img, mask_img);
   min_mask_img.release();
@@ -87,19 +91,18 @@ int main(int argc, char* argv[]) {
  
   // load tone image
   string tone_imagename = dir + "/material/tone.png";
-  Mat tone_img = imread(tone_imagename);
+  Mat tone_img = imread(tone_imagename, /* 0はgray scaleでの読み込み */ 0);
   if (!tone_img.data) {
     cout << "tone file not found" << endl;
     return -1;
   }
 
-  Mat gray_tone_img;
-  cvtColor(tone_img, gray_tone_img, CV_BGR2GRAY);
+  // tone画像をresize
   Mat resize_tone_img;
-  resize(gray_tone_img, resize_tone_img, src_size);
+  resize(tone_img, resize_tone_img, src_size);
 
   // tone画像を重ねる
-  resize_tone_img.copyTo(dst_img, mask_img);
+  resize_tone_img.copyTo(gray_dst_img, mask_img);
   
   // 音響イメージが第三引数として渡されていれば、読み込み
   if (argc > 3) {
@@ -125,7 +128,7 @@ int main(int argc, char* argv[]) {
   
   // new_imageファイルを保存
   string new_imagename = argc > 2 ? argv[2] : dir + "/new_" + basename(imagename);
-  if (imwrite(new_imagename, dst_img)) {
+  if (imwrite(new_imagename, gray_dst_img)) {
     cout << "imwrite:" << new_imagename << " ... success" << endl;
   } else {
     cout << "imwrite:" << new_imagename << " ... failure" << endl;
