@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // gray 文字列が第3引数として渡されていれば、読み込み
+  // gray 文字列が第3引数として渡されていれば、grayに変換し、toneを使用
   if (argc > 3 && !strncmp(argv[3], "gray", 4)) {
     // dst_imgの grayscale を用意
     Mat gray_dst_img;
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
   }
 
   // namedWindow("Display Window", WINDOW_AUTOSIZE);
-  // imshow("Display Window", resize_tone_img);
+  // imshow("Display Window", dst_img);
   // waitKey(0);
 
   return 0;
